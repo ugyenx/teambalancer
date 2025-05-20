@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Manager & Team Divider</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+    <h2>Player Manager & Team Divider</h2>
+
+    <form id="addPlayerForm">
+        <input id="name" type="text" placeholder="Player Name" required />
+        <input id="skill" type="number" placeholder="Skill (1-100)" min="1" max="100" required />
+        <button id="addPlayerBtn" type="submit">Add Player</button>
+    </form>
+
+    <ul id="playerList"></ul>
+
+    <button id="divideTeamsBtn">Divide Selected Players into Teams</button>
+
+    <div id="teamsOutput"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
