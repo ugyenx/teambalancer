@@ -2,33 +2,1235 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Team Divider</title>
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football Team Divider</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      /* Custom scrollbar for player list */
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* --- Range Slider Styling (Fixed Visibility) --- */
+      input[type="range"] {
+        -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+        width: 100%; /* Specific width is required for Firefox. */
+        background: transparent; /* Otherwise white in Chrome */
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: #10b981; /* Emerald 500 */
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-top: -10px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+        cursor: pointer;
+      }
+
+      /* Chrome/Safari/Edge Track */
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: #cbd5e1; /* Darker gray for visibility */
+        border-radius: 3px;
+      }
+
+      /* Firefox Thumb */
+      input[type="range"]::-moz-range-thumb {
+        height: 24px;
+        width: 24px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #10b981;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Firefox Track */
+      input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+    </style>
   </head>
+  <body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-20">
+    <!-- Header -->
+    <header class="bg-emerald-600 text-white p-4 sticky top-0 z-50 shadow-md">
+      <div class="max-w-md mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="ph ph-soccer-ball text-3xl"></i>
+          <h1 class="text-xl font-bold tracking-tight">Team Splitter</h1>
+        </div>
+        <div class="text-sm font-medium bg-emerald-700 px-3 py-1 rounded-full">
+          <span id="player-count">0</span> Players
+        </div>
+      </div>
+    </header>
 
-  <body>
-    <h2>Team Divider</h2>
+    <main class="max-w-md mx-auto p-4 space-y-6">
+      <!-- Input Section -->
+      <section
+        class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100"
+      >
+        <h2
+          class="text-lg font-bold mb-4 text-gray-700 flex items-center gap-2"
+        >
+          <i class="ph ph-user-plus text-emerald-600"></i>
+          <span id="form-title">Add Player</span>
+        </h2>
 
-    <form id="addPlayerForm">
-      <input id="name" type="text" placeholder="Player Name" required />
-      <input
-        id="skill"
-        type="number"
-        placeholder="Skill (1-100)"
-        min="1"
-        max="100"
-        required
-      />
-      <button id="addPlayerBtn" type="submit">Add Player</button>
-    </form>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500 mb-1"
+              >Name</label
+            >
+            <input
+              type="text"
+              id="player-name"
+              placeholder="e.g. Cristiano"
+              class="w-full px-4 py-2 rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
 
-    <ul id="playerList"></ul>
+          <div>
+            <div class="flex justify-between mb-1">
+              <label class="block text-sm font-medium text-gray-500"
+                >Skill Rating</label
+              >
+              <span id="rating-display" class="text-emerald-600 font-bold"
+                >50</span
+              >
+            </div>
+            <!-- Range Slider -->
+            <div class="py-2">
+              <input
+                type="range"
+                id="player-rating"
+                min="1"
+                max="100"
+                value="50"
+                class="w-full appearance-none"
+              />
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 mt-1">
+              <span>Rookie (1)</span>
+              <span>Pro (100)</span>
+            </div>
+          </div>
 
-    <button id="divideTeamsBtn">Divide Selected Players into Teams</button>
+          <div class="flex gap-2 pt-2">
+            <button
+              id="add-btn"
+              class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-emerald-200 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2"
+            >
+              <i class="ph ph-plus-circle text-lg"></i> Add Player
+            </button>
+            <button
+              id="cancel-edit-btn"
+              class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </section>
 
-    <div id="teamsOutput"></div>
+      <!-- Player List -->
+      <section>
+        <div class="flex justify-between items-center mb-3 px-1">
+          <h2 class="text-lg font-bold text-gray-700">Roster</h2>
+          <button
+            id="clear-all-btn"
+            class="text-xs text-red-500 hover:text-red-700 font-medium hidden"
+          >
+            Clear All
+          </button>
+        </div>
 
-    <script src="script.js"></script>
+        <!-- Empty State -->
+        <div
+          id="empty-state"
+          class="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300"
+        >
+          <i class="ph ph-users-three text-4xl text-gray-300 mb-2"></i>
+          <p class="text-gray-400">No players yet.</p>
+          <p class="text-xs text-gray-400">Add players to start.</p>
+        </div>
+
+        <!-- List Container -->
+        <div
+          id="player-list"
+          class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1"
+        >
+          <!-- Items injected by JS -->
+        </div>
+      </section>
+
+      <!-- Generation Settings & Action -->
+      <section class="pt-2">
+        <!-- Algorithm Selection -->
+        <div
+          class="bg-white p-3 rounded-xl border border-gray-100 mb-3 flex items-center justify-between"
+        >
+          <label
+            for="algorithm-select"
+            class="text-sm font-medium text-gray-600 flex items-center gap-2"
+          >
+            <i class="ph ph-faders text-lg"></i> Method:
+          </label>
+          <select
+            id="algorithm-select"
+            class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2"
+          >
+            <option value="balanced">Balanced (Skill)</option>
+            <option value="random">Random (Luck)</option>
+          </select>
+        </div>
+
+        <button
+          id="generate-btn"
+          disabled
+          class="w-full bg-slate-800 hover:bg-slate-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all"
+        >
+          <i class="ph ph-lightning text-xl"></i> Generate Teams
+        </button>
+      </section>
+
+      <!-- Results Section (Hidden initially) -->
+      <section
+        id="results-area"
+        class="hidden space-y-6 pt-6 border-t border-gray-200"
+      >
+        <div class="text-center space-y-1">
+          <h2 class="text-2xl font-bold text-gray-800">Matchup</h2>
+          <p class="text-sm text-gray-500">
+            Rating Diff:
+            <span id="rating-diff" class="font-bold text-emerald-600">0</span>
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Team A -->
+          <div
+            class="bg-blue-50 border border-blue-100 rounded-xl overflow-hidden shadow-sm"
+          >
+            <div class="bg-blue-600 p-3 text-white text-center">
+              <h3 class="font-bold">Team A</h3>
+              <div class="text-xs opacity-90">
+                Total: <span id="teama-score">0</span>
+              </div>
+              <div class="text-xs opacity-90">
+                Avg: <span id="teama-avg">0</span>
+              </div>
+            </div>
+            <ul
+              id="teama-list"
+              class="p-3 space-y-2 text-sm text-blue-900"
+            ></ul>
+          </div>
+
+          <!-- Team B -->
+          <div
+            class="bg-orange-50 border border-orange-100 rounded-xl overflow-hidden shadow-sm"
+          >
+            <div class="bg-orange-600 p-3 text-white text-center">
+              <h3 class="font-bold">Team B</h3>
+              <div class="text-xs opacity-90">
+                Total: <span id="teamb-score">0</span>
+              </div>
+              <div class="text-xs opacity-90">
+                Avg: <span id="teamb-avg">0</span>
+              </div>
+            </div>
+            <ul
+              id="teamb-list"
+              class="p-3 space-y-2 text-sm text-orange-900"
+            ></ul>
+          </div>
+        </div>
+
+        <button
+          onclick="copyTeams()"
+          class="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:bg-gray-50 font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <i class="ph ph-copy"></i> Copy Teams to Clipboard
+        </button>
+      </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div
+      id="toast"
+      class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-sm"
+    >
+      Action Successful
+    </div>
+
+    <script>
+      // --- State Management ---
+      let players = JSON.parse(localStorage.getItem("football_players")) || [];
+      let editingId = null;
+
+      // --- DOM Elements ---
+      const nameInput = document.getElementById("player-name");
+      const ratingInput = document.getElementById("player-rating");
+      const ratingDisplay = document.getElementById("rating-display");
+      const addBtn = document.getElementById("add-btn");
+      const cancelEditBtn = document.getElementById("cancel-edit-btn");
+      const playerList = document.getElementById("player-list");
+      const emptyState = document.getElementById("empty-state");
+      const playerCount = document.getElementById("player-count");
+      const clearAllBtn = document.getElementById("clear-all-btn");
+      const generateBtn = document.getElementById("generate-btn");
+      const resultsArea = document.getElementById("results-area");
+      const formTitle = document.getElementById("form-title");
+      const algoSelect = document.getElementById("algorithm-select");
+
+      // --- Initialization ---
+      updateUI();
+
+      // --- Event Listeners ---
+      ratingInput.addEventListener("input", (e) => {
+        ratingDisplay.textContent = e.target.value;
+      });
+
+      addBtn.addEventListener("click", handleAddOrUpdate);
+
+      cancelEditBtn.addEventListener("click", resetForm);
+
+      clearAllBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete all players?")) {
+          players = [];
+          saveData();
+          updateUI();
+          showToast("All players cleared");
+        }
+      });
+
+      generateBtn.addEventListener("click", generateTeams);
+
+      // --- Core Functions ---
+
+      function handleAddOrUpdate() {
+        const name = nameInput.value.trim();
+        const rating = parseInt(ratingInput.value);
+
+        if (!name) {
+          showToast("Please enter a player name");
+          return;
+        }
+
+        if (editingId) {
+          // Update existing
+          const index = players.findIndex((p) => p.id === editingId);
+          if (index !== -1) {
+            players[index] = { ...players[index], name, rating };
+            showToast("Player updated");
+          }
+        } else {
+          // Add new
+          const newPlayer = {
+            id: Date.now().toString(),
+            name,
+            rating,
+          };
+          players.push(newPlayer);
+          showToast("Player added");
+        }
+
+        saveData();
+        resetForm();
+        updateUI();
+      }
+
+      function deletePlayer(id) {
+        players = players.filter((p) => p.id !== id);
+        saveData();
+        updateUI();
+
+        // If we are currently editing the deleted player, reset form
+        if (editingId === id) resetForm();
+      }
+
+      function editPlayer(id) {
+        const player = players.find((p) => p.id === id);
+        if (!player) return;
+
+        nameInput.value = player.name;
+        ratingInput.value = player.rating;
+        ratingDisplay.textContent = player.rating;
+
+        editingId = id;
+        formTitle.textContent = "Edit Player";
+        addBtn.innerHTML = '<i class="ph ph-check text-lg"></i> Update';
+        addBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+        addBtn.classList.add("bg-blue-600", "hover:bg-blue-700");
+        cancelEditBtn.classList.remove("hidden");
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function resetForm() {
+        nameInput.value = "";
+        ratingInput.value = 50;
+        ratingDisplay.textContent = "50";
+        editingId = null;
+        formTitle.textContent = "Add Player";
+
+        addBtn.innerHTML =
+          '<i class="ph ph-plus-circle text-lg"></i> Add Player';
+        addBtn.classList.add("bg-emerald-600", "hover:bg-emerald-700");
+        addBtn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+        cancelEditBtn.classList.add("hidden");
+      }
+
+      function saveData() {
+        localStorage.setItem("football_players", JSON.stringify(players));
+      }
+
+      function updateUI() {
+        // Update counts
+        playerCount.textContent = players.length;
+
+        // Toggle generate button
+        generateBtn.disabled = players.length < 2;
+
+        // Toggle Clear button
+        if (players.length > 0) {
+          clearAllBtn.classList.remove("hidden");
+          emptyState.classList.add("hidden");
+        } else {
+          clearAllBtn.classList.add("hidden");
+          emptyState.classList.remove("hidden");
+          resultsArea.classList.add("hidden"); // Hide results if no players
+        }
+
+        // Render List
+        playerList.innerHTML = "";
+        // Sort by most recently added for the list view, or alphabetical? Let's do Added Order (reverse)
+        const displayList = [...players].reverse();
+
+        displayList.forEach((player) => {
+          const el = document.createElement("div");
+          el.className =
+            "flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md";
+          el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                            ${player.rating}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-800">${escapeHtml(
+                              player.name
+                            )}</span>
+                            <div class="w-16 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-emerald-400" style="width: ${
+                                  player.rating
+                                }%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="editPlayer('${
+                          player.id
+                        }')" class="p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                            <i class="ph ph-pencil-simple"></i>
+                        </button>
+                        <button onclick="deletePlayer('${
+                          player.id
+                        }')" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </div>
+                `;
+          playerList.appendChild(el);
+        });
+      }
+
+      // --- Team Generation Algorithm ---
+
+      function generateTeams() {
+        if (players.length < 2) return;
+        const algorithm = algoSelect.value;
+
+        const teamA = { members: [], totalRating: 0 };
+        const teamB = { members: [], totalRating: 0 };
+        let playersToAssign = [];
+
+        if (algorithm === "random") {
+          // Fisher-Yates Shuffle
+          playersToAssign = [...players];
+          for (let i = playersToAssign.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [playersToAssign[i], playersToAssign[j]] = [
+              playersToAssign[j],
+              playersToAssign[i],
+            ];
+          }
+
+          // Distribute evenly
+          playersToAssign.forEach((player, index) => {
+            if (index % 2 === 0) {
+              addToTeam(teamA, player);
+            } else {
+              addToTeam(teamB, player);
+            }
+          });
+        } else {
+          // Balanced (Greedy)
+          // 1. Sort players by rating (Highest to Lowest)
+          playersToAssign = [...players].sort((a, b) => b.rating - a.rating);
+
+          // 2. Greedy distribution
+          playersToAssign.forEach((player) => {
+            if (teamA.members.length === teamB.members.length) {
+              if (teamA.totalRating <= teamB.totalRating) {
+                addToTeam(teamA, player);
+              } else {
+                addToTeam(teamB, player);
+              }
+            } else if (teamA.members.length < teamB.members.length) {
+              addToTeam(teamA, player);
+            } else {
+              addToTeam(teamB, player);
+            }
+          });
+        }
+
+        // 3. Render Results
+        renderResults(teamA, teamB);
+
+        // Scroll to results
+        resultsArea.classList.remove("hidden");
+        setTimeout(() => {
+          resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+
+        showToast(
+          `Teams Generated (${algorithm === "random" ? "Random" : "Balanced"})`
+        );
+      }
+
+      function addToTeam(team, player) {
+        team.members.push(player);
+        team.totalRating += player.rating;
+      }
+
+      function renderResults(teamA, teamB) {
+        const renderList = (team, containerId) => {
+          const container = document.getElementById(containerId);
+          container.innerHTML = "";
+          team.members.forEach((p) => {
+            const li = document.createElement("li");
+            li.className =
+              "flex justify-between items-center bg-white/50 p-2 rounded";
+            li.innerHTML = `<span>${escapeHtml(
+              p.name
+            )}</span> <span class="font-bold opacity-60 text-xs">${
+              p.rating
+            }</span>`;
+            container.appendChild(li);
+          });
+        };
+
+        renderList(teamA, "teama-list");
+        renderList(teamB, "teamb-list");
+
+        // Update stats
+        document.getElementById("teama-score").textContent = teamA.totalRating;
+        document.getElementById("teamb-score").textContent = teamB.totalRating;
+
+        const avgA = teamA.members.length
+          ? (teamA.totalRating / teamA.members.length).toFixed(1)
+          : 0;
+        const avgB = teamB.members.length
+          ? (teamB.totalRating / teamB.members.length).toFixed(1)
+          : 0;
+
+        document.getElementById("teama-avg").textContent = avgA;
+        document.getElementById("teamb-avg").textContent = avgB;
+
+        const diff = Math.abs(teamA.totalRating - teamB.totalRating);
+        document.getElementById("rating-diff").textContent = diff;
+      }
+
+      // --- Utilities ---
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("opacity-0");
+        setTimeout(() => {
+          toast.classList.add("opacity-0");
+        }, 2500);
+      }
+
+      function escapeHtml(text) {
+        if (!text) return text;
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function copyTeams() {
+        const teamA = document.getElementById("teama-list").innerText;
+        const teamB = document.getElementById("teamb-list").innerText;
+        const text = `⚽ Team A:\n${teamA}\n\n⚽ Team B:\n${teamB}`;
+
+        // Clipboard API might fail in iframe without permissions, use fallback
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          showToast("Teams copied to clipboard!");
+        } catch (err) {
+          showToast("Failed to copy");
+        }
+        document.body.removeChild(textArea);
+      }
+    </script>
+  </body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Football Team Divider</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+      /* Custom scrollbar for player list */
+      .custom-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scroll::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+      .custom-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* --- Range Slider Styling (Fixed Visibility) --- */
+      input[type="range"] {
+        -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+        width: 100%; /* Specific width is required for Firefox. */
+        background: transparent; /* Otherwise white in Chrome */
+      }
+
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        height: 24px;
+        width: 24px;
+        border-radius: 50%;
+        background: #10b981; /* Emerald 500 */
+        border: 2px solid #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-top: -10px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+        cursor: pointer;
+      }
+
+      /* Chrome/Safari/Edge Track */
+      input[type="range"]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: #cbd5e1; /* Darker gray for visibility */
+        border-radius: 3px;
+      }
+
+      /* Firefox Thumb */
+      input[type="range"]::-moz-range-thumb {
+        height: 24px;
+        width: 24px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: #10b981;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* Firefox Track */
+      input[type="range"]::-moz-range-track {
+        width: 100%;
+        height: 6px;
+        cursor: pointer;
+        background: #cbd5e1;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-20">
+    <!-- Header -->
+    <header class="bg-emerald-600 text-white p-4 sticky top-0 z-50 shadow-md">
+      <div class="max-w-md mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="ph ph-soccer-ball text-3xl"></i>
+          <h1 class="text-xl font-bold tracking-tight">Team Splitter</h1>
+        </div>
+        <div class="text-sm font-medium bg-emerald-700 px-3 py-1 rounded-full">
+          <span id="player-count">0</span> Players
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+      <!-- Input Section -->
+      <section
+        class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100"
+      >
+        <h2
+          class="text-lg font-bold mb-4 text-gray-700 flex items-center gap-2"
+        >
+          <i class="ph ph-user-plus text-emerald-600"></i>
+          <span id="form-title">Add Player</span>
+        </h2>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500 mb-1"
+              >Name</label
+            >
+            <input
+              type="text"
+              id="player-name"
+              placeholder="e.g. Cristiano"
+              class="w-full px-4 py-2 rounded-lg bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            />
+          </div>
+
+          <div>
+            <div class="flex justify-between mb-1">
+              <label class="block text-sm font-medium text-gray-500"
+                >Skill Rating</label
+              >
+              <span id="rating-display" class="text-emerald-600 font-bold"
+                >50</span
+              >
+            </div>
+            <!-- Range Slider -->
+            <div class="py-2">
+              <input
+                type="range"
+                id="player-rating"
+                min="1"
+                max="100"
+                value="50"
+                class="w-full appearance-none"
+              />
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 mt-1">
+              <span>Rookie (1)</span>
+              <span>Pro (100)</span>
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-2">
+            <button
+              id="add-btn"
+              class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-emerald-200 shadow-lg transition-transform active:scale-95 flex justify-center items-center gap-2"
+            >
+              <i class="ph ph-plus-circle text-lg"></i> Add Player
+            </button>
+            <button
+              id="cancel-edit-btn"
+              class="hidden bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Player List -->
+      <section>
+        <div class="flex justify-between items-center mb-3 px-1">
+          <h2 class="text-lg font-bold text-gray-700">Roster</h2>
+          <button
+            id="clear-all-btn"
+            class="text-xs text-red-500 hover:text-red-700 font-medium hidden"
+          >
+            Clear All
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          id="empty-state"
+          class="text-center py-10 bg-white rounded-2xl border border-dashed border-gray-300"
+        >
+          <i class="ph ph-users-three text-4xl text-gray-300 mb-2"></i>
+          <p class="text-gray-400">No players yet.</p>
+          <p class="text-xs text-gray-400">Add players to start.</p>
+        </div>
+
+        <!-- List Container -->
+        <div
+          id="player-list"
+          class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1"
+        >
+          <!-- Items injected by JS -->
+        </div>
+      </section>
+
+      <!-- Generation Settings & Action -->
+      <section class="pt-2">
+        <!-- Algorithm Selection -->
+        <div
+          class="bg-white p-3 rounded-xl border border-gray-100 mb-3 flex items-center justify-between"
+        >
+          <label
+            for="algorithm-select"
+            class="text-sm font-medium text-gray-600 flex items-center gap-2"
+          >
+            <i class="ph ph-faders text-lg"></i> Method:
+          </label>
+          <select
+            id="algorithm-select"
+            class="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-2"
+          >
+            <option value="balanced">Balanced (Skill)</option>
+            <option value="random">Random (Luck)</option>
+          </select>
+        </div>
+
+        <button
+          id="generate-btn"
+          disabled
+          class="w-full bg-slate-800 hover:bg-slate-900 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl shadow-xl flex items-center justify-center gap-2 transition-all"
+        >
+          <i class="ph ph-lightning text-xl"></i> Generate Teams
+        </button>
+      </section>
+
+      <!-- Results Section (Hidden initially) -->
+      <section
+        id="results-area"
+        class="hidden space-y-6 pt-6 border-t border-gray-200"
+      >
+        <div class="text-center space-y-1">
+          <h2 class="text-2xl font-bold text-gray-800">Matchup</h2>
+          <p class="text-sm text-gray-500">
+            Rating Diff:
+            <span id="rating-diff" class="font-bold text-emerald-600">0</span>
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <!-- Team A -->
+          <div
+            class="bg-blue-50 border border-blue-100 rounded-xl overflow-hidden shadow-sm"
+          >
+            <div class="bg-blue-600 p-3 text-white text-center">
+              <h3 class="font-bold">Team A</h3>
+              <div class="text-xs opacity-90">
+                Total: <span id="teama-score">0</span>
+              </div>
+              <div class="text-xs opacity-90">
+                Avg: <span id="teama-avg">0</span>
+              </div>
+            </div>
+            <ul
+              id="teama-list"
+              class="p-3 space-y-2 text-sm text-blue-900"
+            ></ul>
+          </div>
+
+          <!-- Team B -->
+          <div
+            class="bg-orange-50 border border-orange-100 rounded-xl overflow-hidden shadow-sm"
+          >
+            <div class="bg-orange-600 p-3 text-white text-center">
+              <h3 class="font-bold">Team B</h3>
+              <div class="text-xs opacity-90">
+                Total: <span id="teamb-score">0</span>
+              </div>
+              <div class="text-xs opacity-90">
+                Avg: <span id="teamb-avg">0</span>
+              </div>
+            </div>
+            <ul
+              id="teamb-list"
+              class="p-3 space-y-2 text-sm text-orange-900"
+            ></ul>
+          </div>
+        </div>
+
+        <button
+          onclick="copyTeams()"
+          class="w-full border-2 border-dashed border-gray-300 text-gray-500 hover:bg-gray-50 font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+        >
+          <i class="ph ph-copy"></i> Copy Teams to Clipboard
+        </button>
+      </section>
+    </main>
+
+    <!-- Notification Toast -->
+    <div
+      id="toast"
+      class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-sm"
+    >
+      Action Successful
+    </div>
+
+    <script>
+      // --- State Management ---
+      let players = JSON.parse(localStorage.getItem("football_players")) || [];
+      let editingId = null;
+
+      // --- DOM Elements ---
+      const nameInput = document.getElementById("player-name");
+      const ratingInput = document.getElementById("player-rating");
+      const ratingDisplay = document.getElementById("rating-display");
+      const addBtn = document.getElementById("add-btn");
+      const cancelEditBtn = document.getElementById("cancel-edit-btn");
+      const playerList = document.getElementById("player-list");
+      const emptyState = document.getElementById("empty-state");
+      const playerCount = document.getElementById("player-count");
+      const clearAllBtn = document.getElementById("clear-all-btn");
+      const generateBtn = document.getElementById("generate-btn");
+      const resultsArea = document.getElementById("results-area");
+      const formTitle = document.getElementById("form-title");
+      const algoSelect = document.getElementById("algorithm-select");
+
+      // --- Initialization ---
+      updateUI();
+
+      // --- Event Listeners ---
+      ratingInput.addEventListener("input", (e) => {
+        ratingDisplay.textContent = e.target.value;
+      });
+
+      addBtn.addEventListener("click", handleAddOrUpdate);
+
+      cancelEditBtn.addEventListener("click", resetForm);
+
+      clearAllBtn.addEventListener("click", () => {
+        if (confirm("Are you sure you want to delete all players?")) {
+          players = [];
+          saveData();
+          updateUI();
+          showToast("All players cleared");
+        }
+      });
+
+      generateBtn.addEventListener("click", generateTeams);
+
+      // --- Core Functions ---
+
+      function handleAddOrUpdate() {
+        const name = nameInput.value.trim();
+        const rating = parseInt(ratingInput.value);
+
+        if (!name) {
+          showToast("Please enter a player name");
+          return;
+        }
+
+        if (editingId) {
+          // Update existing
+          const index = players.findIndex((p) => p.id === editingId);
+          if (index !== -1) {
+            players[index] = { ...players[index], name, rating };
+            showToast("Player updated");
+          }
+        } else {
+          // Add new
+          const newPlayer = {
+            id: Date.now().toString(),
+            name,
+            rating,
+          };
+          players.push(newPlayer);
+          showToast("Player added");
+        }
+
+        saveData();
+        resetForm();
+        updateUI();
+      }
+
+      function deletePlayer(id) {
+        players = players.filter((p) => p.id !== id);
+        saveData();
+        updateUI();
+
+        // If we are currently editing the deleted player, reset form
+        if (editingId === id) resetForm();
+      }
+
+      function editPlayer(id) {
+        const player = players.find((p) => p.id === id);
+        if (!player) return;
+
+        nameInput.value = player.name;
+        ratingInput.value = player.rating;
+        ratingDisplay.textContent = player.rating;
+
+        editingId = id;
+        formTitle.textContent = "Edit Player";
+        addBtn.innerHTML = '<i class="ph ph-check text-lg"></i> Update';
+        addBtn.classList.remove("bg-emerald-600", "hover:bg-emerald-700");
+        addBtn.classList.add("bg-blue-600", "hover:bg-blue-700");
+        cancelEditBtn.classList.remove("hidden");
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function resetForm() {
+        nameInput.value = "";
+        ratingInput.value = 50;
+        ratingDisplay.textContent = "50";
+        editingId = null;
+        formTitle.textContent = "Add Player";
+
+        addBtn.innerHTML =
+          '<i class="ph ph-plus-circle text-lg"></i> Add Player';
+        addBtn.classList.add("bg-emerald-600", "hover:bg-emerald-700");
+        addBtn.classList.remove("bg-blue-600", "hover:bg-blue-700");
+        cancelEditBtn.classList.add("hidden");
+      }
+
+      function saveData() {
+        localStorage.setItem("football_players", JSON.stringify(players));
+      }
+
+      function updateUI() {
+        // Update counts
+        playerCount.textContent = players.length;
+
+        // Toggle generate button
+        generateBtn.disabled = players.length < 2;
+
+        // Toggle Clear button
+        if (players.length > 0) {
+          clearAllBtn.classList.remove("hidden");
+          emptyState.classList.add("hidden");
+        } else {
+          clearAllBtn.classList.add("hidden");
+          emptyState.classList.remove("hidden");
+          resultsArea.classList.add("hidden"); // Hide results if no players
+        }
+
+        // Render List
+        playerList.innerHTML = "";
+        // Sort by most recently added for the list view, or alphabetical? Let's do Added Order (reverse)
+        const displayList = [...players].reverse();
+
+        displayList.forEach((player) => {
+          const el = document.createElement("div");
+          el.className =
+            "flex items-center justify-between bg-white p-3 rounded-xl border border-gray-100 shadow-sm transition-all hover:shadow-md";
+          el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                            ${player.rating}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-800">${escapeHtml(
+                              player.name
+                            )}</span>
+                            <div class="w-16 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full bg-emerald-400" style="width: ${
+                                  player.rating
+                                }%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="editPlayer('${
+                          player.id
+                        }')" class="p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                            <i class="ph ph-pencil-simple"></i>
+                        </button>
+                        <button onclick="deletePlayer('${
+                          player.id
+                        }')" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </div>
+                `;
+          playerList.appendChild(el);
+        });
+      }
+
+      // --- Team Generation Algorithm ---
+
+      function generateTeams() {
+        if (players.length < 2) return;
+        const algorithm = algoSelect.value;
+
+        const teamA = { members: [], totalRating: 0 };
+        const teamB = { members: [], totalRating: 0 };
+        let playersToAssign = [];
+
+        if (algorithm === "random") {
+          // Fisher-Yates Shuffle
+          playersToAssign = [...players];
+          for (let i = playersToAssign.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [playersToAssign[i], playersToAssign[j]] = [
+              playersToAssign[j],
+              playersToAssign[i],
+            ];
+          }
+
+          // Distribute evenly
+          playersToAssign.forEach((player, index) => {
+            if (index % 2 === 0) {
+              addToTeam(teamA, player);
+            } else {
+              addToTeam(teamB, player);
+            }
+          });
+        } else {
+          // Balanced (Greedy)
+          // 1. Sort players by rating (Highest to Lowest)
+          playersToAssign = [...players].sort((a, b) => b.rating - a.rating);
+
+          // 2. Greedy distribution
+          playersToAssign.forEach((player) => {
+            if (teamA.members.length === teamB.members.length) {
+              if (teamA.totalRating <= teamB.totalRating) {
+                addToTeam(teamA, player);
+              } else {
+                addToTeam(teamB, player);
+              }
+            } else if (teamA.members.length < teamB.members.length) {
+              addToTeam(teamA, player);
+            } else {
+              addToTeam(teamB, player);
+            }
+          });
+        }
+
+        // 3. Render Results
+        renderResults(teamA, teamB);
+
+        // Scroll to results
+        resultsArea.classList.remove("hidden");
+        setTimeout(() => {
+          resultsArea.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+
+        showToast(
+          `Teams Generated (${algorithm === "random" ? "Random" : "Balanced"})`
+        );
+      }
+
+      function addToTeam(team, player) {
+        team.members.push(player);
+        team.totalRating += player.rating;
+      }
+
+      function renderResults(teamA, teamB) {
+        const renderList = (team, containerId) => {
+          const container = document.getElementById(containerId);
+          container.innerHTML = "";
+          team.members.forEach((p) => {
+            const li = document.createElement("li");
+            li.className =
+              "flex justify-between items-center bg-white/50 p-2 rounded";
+            li.innerHTML = `<span>${escapeHtml(
+              p.name
+            )}</span> <span class="font-bold opacity-60 text-xs">${
+              p.rating
+            }</span>`;
+            container.appendChild(li);
+          });
+        };
+
+        renderList(teamA, "teama-list");
+        renderList(teamB, "teamb-list");
+
+        // Update stats
+        document.getElementById("teama-score").textContent = teamA.totalRating;
+        document.getElementById("teamb-score").textContent = teamB.totalRating;
+
+        const avgA = teamA.members.length
+          ? (teamA.totalRating / teamA.members.length).toFixed(1)
+          : 0;
+        const avgB = teamB.members.length
+          ? (teamB.totalRating / teamB.members.length).toFixed(1)
+          : 0;
+
+        document.getElementById("teama-avg").textContent = avgA;
+        document.getElementById("teamb-avg").textContent = avgB;
+
+        const diff = Math.abs(teamA.totalRating - teamB.totalRating);
+        document.getElementById("rating-diff").textContent = diff;
+      }
+
+      // --- Utilities ---
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.remove("opacity-0");
+        setTimeout(() => {
+          toast.classList.add("opacity-0");
+        }, 2500);
+      }
+
+      function escapeHtml(text) {
+        if (!text) return text;
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function copyTeams() {
+        const teamA = document.getElementById("teama-list").innerText;
+        const teamB = document.getElementById("teamb-list").innerText;
+        const text = `⚽ Team A:\n${teamA}\n\n⚽ Team B:\n${teamB}`;
+
+        // Clipboard API might fail in iframe without permissions, use fallback
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand("copy");
+          showToast("Teams copied to clipboard!");
+        } catch (err) {
+          showToast("Failed to copy");
+        }
+        document.body.removeChild(textArea);
+      }
+    </script>
   </body>
 </html>
