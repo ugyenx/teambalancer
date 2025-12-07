@@ -81,6 +81,12 @@
             background-color: #f3f4f6; /* gray-100 */
             border-color: #e5e7eb;
         }
+
+        /* Modal specific styles */
+        .roster-modal {
+            max-height: 100vh;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen pb-20">
@@ -142,10 +148,17 @@
         <!-- Player List -->
         <section>
             <div class="flex justify-between items-center mb-3 px-1">
-                <h2 class="text-lg font-bold text-gray-700">Roster <span class="text-sm font-normal text-gray-400 ml-1">(Tap to exclude)</span></h2>
-                <button id="clear-all-btn" class="text-xs text-red-500 hover:text-red-700 font-medium hidden">
-                    Clear All
-                </button>
+                <h2 class="text-lg font-bold text-gray-700 flex items-center gap-2">
+                    Roster <span class="text-sm font-normal text-gray-400 ml-1">(Tap to exclude)</span>
+                </h2>
+                <div class="flex gap-2 items-center">
+                    <button id="clear-all-btn" class="text-xs text-red-500 hover:text-red-700 font-medium hidden">
+                        Clear All
+                    </button>
+                    <button id="maximize-roster-btn" class="text-gray-400 hover:text-gray-700 p-1 rounded-full transition-colors hidden" title="Maximize Roster View">
+                        <i class="ph ph-arrows-out-simple text-xl"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- Empty State -->
@@ -155,7 +168,7 @@
                 <p class="text-xs text-gray-400">Add players to start.</p>
             </div>
 
-            <!-- List Container -->
+            <!-- List Container (Normal View) -->
             <div id="player-list" class="space-y-2 max-h-60 overflow-y-auto custom-scroll pr-1">
                 <!-- Items injected by JS -->
             </div>
@@ -217,6 +230,31 @@
 
     </main>
 
+    <!-- Roster Fullscreen Modal -->
+    <div id="roster-modal" class="fixed inset-0 bg-white z-50 transform translate-x-full transition-transform duration-300">
+        <header class="bg-emerald-600 text-white p-4 flex justify-between items-center shadow-lg">
+            <h2 class="text-xl font-bold">Full Roster Management</h2>
+            <button id="close-modal-btn" class="p-2 hover:bg-emerald-500 rounded-full transition-colors">
+                <i class="ph ph-x text-2xl"></i>
+            </button>
+        </header>
+        <div class="roster-modal p-4 space-y-4">
+            <div class="text-sm text-gray-600 p-2 border-l-4 border-emerald-400 bg-emerald-50 rounded-lg">
+                <i class="ph ph-info text-emerald-600 mr-1"></i> Changes are automatically saved. Click "Done" to exit.
+            </div>
+            <!-- Fullscreen list container (will be populated on modal open) -->
+            <div id="modal-player-list" class="space-y-2 pb-20">
+                <!-- Items injected by JS (Full height) -->
+            </div>
+        </div>
+        <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t shadow-2xl">
+            <button id="modal-done-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors">
+                Done (Close Roster View)
+            </button>
+        </div>
+    </div>
+
+
     <!-- Notification Toast -->
     <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 text-sm">
         Action Successful
@@ -234,6 +272,7 @@
         const addBtn = document.getElementById('add-btn');
         const cancelEditBtn = document.getElementById('cancel-edit-btn');
         const playerList = document.getElementById('player-list');
+        const modalPlayerList = document.getElementById('modal-player-list'); // New
         const emptyState = document.getElementById('empty-state');
         const playerCount = document.getElementById('player-count');
         const clearAllBtn = document.getElementById('clear-all-btn');
@@ -242,6 +281,8 @@
         const resultsArea = document.getElementById('results-area');
         const formTitle = document.getElementById('form-title');
         const algoSelect = document.getElementById('algorithm-select');
+        const rosterModal = document.getElementById('roster-modal'); // New
+        const maximizeRosterBtn = document.getElementById('maximize-roster-btn'); // New
 
         // --- Initialization ---
         updateUI();
@@ -252,19 +293,37 @@
         });
 
         addBtn.addEventListener('click', handleAddOrUpdate);
-
         cancelEditBtn.addEventListener('click', resetForm);
-
         clearAllBtn.addEventListener('click', () => {
-            if(confirm('Are you sure you want to delete all players?')) {
+            // Using a custom modal is better than confirm() but for simplicity, we keep the alert message format.
+            if(window.confirm('Are you sure you want to delete all players?')) {
                 players = [];
                 saveData();
                 updateUI();
                 showToast('All players cleared');
             }
         });
-
         generateBtn.addEventListener('click', generateTeams);
+        
+        // Modal Handlers
+        maximizeRosterBtn.addEventListener('click', openRosterModal);
+        document.getElementById('close-modal-btn').addEventListener('click', closeRosterModal);
+        document.getElementById('modal-done-btn').addEventListener('click', closeRosterModal);
+
+        function openRosterModal() {
+            rosterModal.classList.remove('translate-x-full');
+            rosterModal.classList.add('translate-x-0');
+            // Re-render the list inside the modal to ensure it's up to date
+            renderPlayerList(modalPlayerList, false); 
+        }
+
+        function closeRosterModal() {
+            rosterModal.classList.remove('translate-x-0');
+            rosterModal.classList.add('translate-x-full');
+            // Update the main UI after modal is closed (in case any changes were missed)
+            updateUI(); 
+        }
+
 
         // --- Core Functions ---
 
@@ -309,11 +368,21 @@
             
             // If we are currently editing the deleted player, reset form
             if (editingId === id) resetForm();
+
+            // Also update modal if open
+            if (rosterModal.classList.contains('translate-x-0')) {
+                renderPlayerList(modalPlayerList, false);
+            }
         }
 
         function editPlayer(id) {
             const player = players.find(p => p.id === id);
             if (!player) return;
+
+            // Close modal if open, so user can edit in main form
+            if (rosterModal.classList.contains('translate-x-0')) {
+                 closeRosterModal();
+            }
 
             nameInput.value = player.name;
             ratingInput.value = player.rating;
@@ -356,8 +425,79 @@
         function saveData() {
             localStorage.setItem('football_players', JSON.stringify(players));
         }
+        
+        // Renders the player list into a specified container
+        function renderPlayerList(container, isCompact) {
+            container.innerHTML = '';
+            const displayList = [...players].reverse();
+            
+            displayList.forEach(player => {
+                const isActive = player.active !== false;
+                
+                const el = document.createElement('div');
+                const opacityClass = isActive ? 'opacity-100 bg-white border-emerald-500' : 'inactive bg-gray-50 border-gray-200';
+                const iconColor = isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-400';
+                const barColor = isActive ? 'bg-emerald-400' : 'bg-gray-400';
+                const checkIcon = isActive ? '<i class="ph-fill ph-check-circle text-emerald-500 text-xl"></i>' : '<i class="ph ph-circle text-gray-300 text-xl"></i>';
+                
+                // Card style
+                const cardClasses = isCompact 
+                    ? `player-card cursor-pointer flex items-center justify-between p-3 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md ${opacityClass}`
+                    : `player-card cursor-pointer flex items-center justify-between p-4 rounded-xl border-l-8 shadow-md transition-all hover:shadow-lg ${opacityClass}`;
+
+                el.className = cardClasses;
+                el.onclick = () => togglePlayer(player.id);
+
+                el.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-6 flex justify-center">
+                            ${checkIcon}
+                        </div>
+                        <div class="h-10 w-10 rounded-full ${iconColor} flex items-center justify-center font-bold text-sm">
+                            ${player.rating}
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-semibold text-gray-800">${escapeHtml(player.name)}</span>
+                            <div class="w-20 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
+                                <div class="h-full ${barColor}" style="width: ${player.rating}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-1">
+                        <button onclick="event.stopPropagation(); editPlayer('${player.id}')" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
+                            <i class="ph ph-pencil-simple text-lg"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); deletePlayer('${player.id}')" class="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
+                            <i class="ph ph-trash text-lg"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(el);
+            });
+
+            // Handle empty state separately for the main UI
+            if (isCompact) {
+                if (players.length > 0) {
+                    emptyState.classList.add('hidden');
+                    clearAllBtn.classList.remove('hidden');
+                    maximizeRosterBtn.classList.remove('hidden');
+                } else {
+                    emptyState.classList.remove('hidden');
+                    clearAllBtn.classList.add('hidden');
+                    maximizeRosterBtn.classList.add('hidden');
+                    resultsArea.classList.add('hidden');
+                }
+            }
+        }
+
 
         function updateUI() {
+            // Rerender lists
+            renderPlayerList(playerList, true); // Main list (compact)
+            if (rosterModal.classList.contains('translate-x-0')) {
+                renderPlayerList(modalPlayerList, false); // Modal list (full size)
+            }
+
             // Count total and active
             playerCount.textContent = players.length;
             const activePlayers = players.filter(p => p.active !== false);
@@ -370,62 +510,6 @@
                 generateBtn.disabled = false;
                 generateBtnText.textContent = `Generate Teams (${activePlayers.length})`;
             }
-            
-            // Toggle Clear button
-            if (players.length > 0) {
-                clearAllBtn.classList.remove('hidden');
-                emptyState.classList.add('hidden');
-            } else {
-                clearAllBtn.classList.add('hidden');
-                emptyState.classList.remove('hidden');
-                resultsArea.classList.add('hidden');
-            }
-
-            // Render List
-            playerList.innerHTML = '';
-            const displayList = [...players].reverse();
-
-            displayList.forEach(player => {
-                // Default active if undefined (for old data)
-                const isActive = player.active !== false;
-                
-                const el = document.createElement('div');
-                // Dynamic classes based on active state
-                const opacityClass = isActive ? 'opacity-100 bg-white border-emerald-500' : 'inactive bg-gray-50 border-gray-200';
-                const iconColor = isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-200 text-gray-400';
-                const barColor = isActive ? 'bg-emerald-400' : 'bg-gray-400';
-                const checkIcon = isActive ? '<i class="ph-fill ph-check-circle text-emerald-500 text-xl"></i>' : '<i class="ph ph-circle text-gray-300 text-xl"></i>';
-
-                // We must stop propagation for buttons, but the card click handles the toggle
-                el.className = `player-card cursor-pointer flex items-center justify-between p-3 rounded-xl border-l-4 shadow-sm transition-all hover:shadow-md ${opacityClass}`;
-                el.onclick = () => togglePlayer(player.id);
-
-                el.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-6 flex justify-center">
-                            ${checkIcon}
-                        </div>
-                        <div class="h-10 w-10 rounded-full ${iconColor} flex items-center justify-center font-bold text-sm">
-                            ${player.rating}
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="font-semibold text-gray-800">${escapeHtml(player.name)}</span>
-                            <div class="w-16 h-1.5 bg-gray-100 rounded-full mt-1 overflow-hidden">
-                                <div class="h-full ${barColor}" style="width: ${player.rating}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex gap-1">
-                        <button onclick="event.stopPropagation(); editPlayer('${player.id}')" class="p-2 text-gray-400 hover:text-blue-600 transition-colors" title="Edit">
-                            <i class="ph ph-pencil-simple"></i>
-                        </button>
-                        <button onclick="event.stopPropagation(); deletePlayer('${player.id}')" class="p-2 text-gray-400 hover:text-red-500 transition-colors" title="Delete">
-                            <i class="ph ph-trash"></i>
-                        </button>
-                    </div>
-                `;
-                playerList.appendChild(el);
-            });
         }
 
         // --- Team Generation Algorithm ---
